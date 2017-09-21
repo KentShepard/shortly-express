@@ -1,0 +1,4 @@
+1. On join first we would logout the previous user.
+  2.
+
+

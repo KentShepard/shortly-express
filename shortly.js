@@ -2,7 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-
+var bcrypt = require('bcrypt-nodejs');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -10,6 +10,8 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+
+var passport = require('passport');
 
 var app = express();
 
@@ -23,25 +25,26 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 
-app.get('/', 
+app.get('/',
+function(req, res) {
+  res.render('login');
+});
+
+app.get('/create',
 function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
-function(req, res) {
-  res.render('index');
-});
-
-app.get('/links', 
+app.get('/links',
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.status(200).send(links.models);
   });
 });
 
-app.post('/links', 
+app.post('/links',
 function(req, res) {
+  console.log(req.body);
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -75,8 +78,13 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+app.get('/signup', function(req, res) {
+  res.render('signup');
+});
 
-
+app.get('/login', function(req, res) {
+  res.render('login');
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
