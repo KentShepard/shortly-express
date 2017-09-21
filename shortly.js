@@ -24,16 +24,24 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
-
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true,
+}));
 
 app.get('/',
 function(req, res) {
-  res.render('index');
+  if (req.session.user) {
+    res.render('index');
+  } else {
+    res.render('signup');
+  }
 });
 
 app.get('/create',
 function(req, res) {
-  res.render('index');
+  res.render('create');
 });
 
 app.get('/links',
@@ -80,12 +88,10 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 app.get('/signup', function(req, res) {
-  console.log('SIGN UP GET REQ');
   res.render('signup');
 });
 
 app.post('/signup', function(req, res) {
-  console.log('SIGNED UPPPPPPP WOOOOOHOOOOOOOO ----------------------->', req.body);
   var user = req.body.username;
   var passy = req.body.password;
   var hashPass;
@@ -97,8 +103,7 @@ app.post('/signup', function(req, res) {
 
   new User({ username: user}).fetch().then(function(found) {
     if (found) {
-      console.log('USER EXISTS ---->');
-      res.redirect('/login');
+      res.redirect('login');
     } else {
 
       Users.create({
@@ -106,14 +111,9 @@ app.post('/signup', function(req, res) {
         password: hashPass,
       })
       .then(function(newUser) {
-        res.status(200).send(newUser);
-        res.redirect('/');
-      })
-    //   var newUser = new User({
-    //     username: user,
-    //     password: hashPass
-    // });
 
+        res.redirect('login');
+      })
     };
   });
 });
@@ -123,18 +123,15 @@ app.get('/login', function(req, res) {
 });
 
 app.post('/login', function(req, res) {
-  new User({ username: req.body.username}).fetch().then(function(found) {
-    if (found) {
-      if (req.body.password === req.body.username.password) {
-        req.session.user = req.body.username;
-        res.redirect('/');
-      }
-      console.log('USER EXISTS ---->');
-      console.log('Invalid Password');
+  util.checkCred(req.body.username, req.body.password, function(exists) {
+    if (exists) {
+      req.session.user = req.body.username;
+      res.redirect('/');
     } else {
-      res.redirect('/signup')
+      console.log('Invalid Password');
+      res.redirect('/signup');
     }
-  });
+  })
 });
 
 // app.post('/login', function(req, res) {
