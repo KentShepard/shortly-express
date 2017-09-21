@@ -11,6 +11,7 @@ var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
+var session = require('express-session');
 var passport = require('passport');
 
 var app = express();
@@ -27,7 +28,7 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/',
 function(req, res) {
-  res.render('signup');
+  res.render('index');
 });
 
 app.get('/create',
@@ -86,25 +87,77 @@ app.get('/signup', function(req, res) {
 app.post('/signup', function(req, res) {
   console.log('SIGNED UPPPPPPP WOOOOOHOOOOOOOO ----------------------->', req.body);
   var user = req.body.username;
-  bcrypt.hash(req.body.password, 10, function(err, hash) {
-    // Store hash in database
+  var passy = req.body.password;
+  var hashPass;
+  bcrypt.hash(passy, null, null, function(err, hash) {
+    hashPass = hash;
+    console.log(hash);
+      // Store hash in your password DB.
   });
 
   new User({ username: user}).fetch().then(function(found) {
     if (found) {
-      return //
+      console.log('USER EXISTS ---->');
+      res.redirect('/login');
     } else {
-      var user = new User({
-        username: user,
-        password: //HASH THE PASSWORD
-      });
 
-    }
-  })
+      Users.create({
+        username: user,
+        password: hashPass,
+      })
+      .then(function(newUser) {
+        res.status(200).send(newUser);
+        res.redirect('/');
+      })
+    //   var newUser = new User({
+    //     username: user,
+    //     password: hashPass
+    // });
+
+    };
+  });
 });
 
 app.get('/login', function(req, res) {
   res.render('login');
+});
+
+app.post('/login', function(req, res) {
+  new User({ username: req.body.username}).fetch().then(function(found) {
+    if (found) {
+      if (req.body.password === req.body.username.password) {
+        req.session.user = req.body.username;
+        res.redirect('/');
+      }
+      console.log('USER EXISTS ---->');
+      console.log('Invalid Password');
+    } else {
+      res.redirect('/signup')
+    }
+  });
+});
+
+// app.post('/login', function(req, res) {
+//   User.findOne({ email: req.body.email }, function(err, user) {
+//     if (!user) {
+//       res.render('login.jade', { error: 'Invalid email or password.' });
+//     } else {
+//       if (req.body.password === user.password) {
+//         // sets a cookie with the user's info
+//         req.session.user = user;
+//         res.redirect('/dashboard');
+//       } else {
+//         res.render('login.jade', { error: 'Invalid email or password.' });
+//       }
+//     }
+//   });
+// });
+
+app.get('/logout', function(req, res) {
+  req.session.destroy(function(err) {
+    if (err) { throw err; }
+    res.redirect('/login');
+  });
 });
 
 /************************************************************/
