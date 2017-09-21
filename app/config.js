@@ -53,11 +53,4 @@ db.knex.schema.hasTable('users').then(function(exists) {
   }
 });
 
-db.knex.select('*')
-.from('urls')
-.then(function(data) {
-  return console.log(data)
-})
-.catch(function(error) { console.error(error); });
-
 module.exports = db;

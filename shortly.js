@@ -27,7 +27,7 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/',
 function(req, res) {
-  res.render('login');
+  res.render('signup');
 });
 
 app.get('/create',
@@ -79,7 +79,28 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 app.get('/signup', function(req, res) {
+  console.log('SIGN UP GET REQ');
   res.render('signup');
+});
+
+app.post('/signup', function(req, res) {
+  console.log('SIGNED UPPPPPPP WOOOOOHOOOOOOOO ----------------------->', req.body);
+  var user = req.body.username;
+  bcrypt.hash(req.body.password, 10, function(err, hash) {
+    // Store hash in database
+  });
+
+  new User({ username: user}).fetch().then(function(found) {
+    if (found) {
+      return //
+    } else {
+      var user = new User({
+        username: user,
+        password: //HASH THE PASSWORD
+      });
+
+    }
+  })
 });
 
 app.get('/login', function(req, res) {
