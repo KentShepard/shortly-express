@@ -24,36 +24,28 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
   saveUninitialized: true,
 }));
 
-app.get('/',
-function(req, res) {
-  if (req.session.user) {
-    res.render('index');
-  } else {
-    res.render('signup');
-  }
+app.get('/', function(req, res) {
+  res.render('index');
 });
 
-app.get('/create',
-function(req, res) {
-  res.render('create');
+app.get('/create', function(req, res) {
+  res.render('index');
 });
 
-app.get('/links',
-function(req, res) {
+app.get('/links', function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.status(200).send(links.models);
   });
 });
 
-app.post('/links',
-function(req, res) {
-  console.log(req.body);
+app.post('/links', function(req, res) {
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -72,13 +64,13 @@ function(req, res) {
         }
 
         Links.create({
-          url: uri,
-          title: title,
-          baseUrl: req.headers.origin
-        })
-        .then(function(newLink) {
-          res.status(200).send(newLink);
-        });
+            url: uri,
+            title: title,
+            baseUrl: req.headers.origin
+          })
+          .then(function(newLink) {
+            res.status(200).send(newLink);
+          });
       });
     }
   });
@@ -98,22 +90,22 @@ app.post('/signup', function(req, res) {
   bcrypt.hash(passy, null, null, function(err, hash) {
     hashPass = hash;
     console.log(hash);
-      // Store hash in your password DB.
+    // Store hash in your password DB.
   });
 
-  new User({ username: user}).fetch().then(function(found) {
+  new User({ username: user }).fetch().then(function(found) {
     if (found) {
       res.redirect('login');
     } else {
 
       Users.create({
-        username: user,
-        password: hashPass,
-      })
-      .then(function(newUser) {
+          username: user,
+          password: hashPass,
+        })
+        .then(function(newUser) {
 
-        res.redirect('login');
-      })
+          res.redirect('login');
+        })
     };
   });
 });
@@ -125,11 +117,10 @@ app.get('/login', function(req, res) {
 app.post('/login', function(req, res) {
   util.checkCred(req.body.username, req.body.password, function(exists) {
     if (exists) {
-      req.session.user = req.body.username;
-      res.redirect('/');
+      util.createSession(req, res, req.body.username);
     } else {
       console.log('Invalid Password');
-      res.redirect('/signup');
+      res.redirect('/login');
     }
   })
 });
