@@ -24,7 +24,6 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
-
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
@@ -32,17 +31,29 @@ app.use(session({
 }));
 
 app.get('/', function(req, res) {
-  res.render('index');
+  if (req.session.user) {
+    res.render('index');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.get('/create', function(req, res) {
-  res.render('index');
+  if (req.session.user) {
+    res.render('index');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.get('/links', function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.status(200).send(links.models);
-  });
+  if (req.session.user) {
+    Links.reset().fetch().then(function(links) {
+      res.status(200).send(links.models);
+    });
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.post('/links', function(req, res) {
@@ -64,13 +75,13 @@ app.post('/links', function(req, res) {
         }
 
         Links.create({
-            url: uri,
-            title: title,
-            baseUrl: req.headers.origin
-          })
-          .then(function(newLink) {
-            res.status(200).send(newLink);
-          });
+          url: uri,
+          title: title,
+          baseUrl: req.headers.origin
+        })
+        .then(function(newLink) {
+          res.status(200).send(newLink);
+        });
       });
     }
   });
@@ -90,22 +101,22 @@ app.post('/signup', function(req, res) {
   bcrypt.hash(passy, null, null, function(err, hash) {
     hashPass = hash;
     console.log(hash);
-    // Store hash in your password DB.
+      // Store hash in your password DB.
   });
 
-  new User({ username: user }).fetch().then(function(found) {
+  new User({ username: user}).fetch().then(function(found) {
     if (found) {
       res.redirect('login');
     } else {
 
       Users.create({
-          username: user,
-          password: hashPass,
-        })
-        .then(function(newUser) {
+        username: user,
+        password: hashPass,
+      })
+      .then(function(newUser) {
 
-          res.redirect('login');
-        })
+        res.redirect('login');
+      })
     };
   });
 });
